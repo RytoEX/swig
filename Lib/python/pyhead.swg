@@ -36,7 +36,7 @@
 SWIGINTERN char*
 SWIG_Python_str_AsChar(PyObject *str)
 {
-#if PY_VERSION_HEX >= 0x03030000
+#if PY_VERSION_HEX >= 0x03030000 && !defined(Py_LIMITED_API)
   return (char *)PyUnicode_AsUTF8(str);
 #elif PY_VERSION_HEX >= 0x03000000
   char *newstr = 0;
@@ -57,7 +57,7 @@ SWIG_Python_str_AsChar(PyObject *str)
 #endif
 }
 
-#if PY_VERSION_HEX >= 0x03030000 || PY_VERSION_HEX < 0x03000000
+#if (PY_VERSION_HEX >= 0x03030000 && !defined(Py_LIMITED_API)) || PY_VERSION_HEX < 0x03000000
 #  define SWIG_Python_str_DelForPy3(x)
 #else
 #  define SWIG_Python_str_DelForPy3(x) free( (void*) (x) )
@@ -91,4 +91,18 @@ SWIG_Python_str_FromChar(const char *c)
 #define PyDescr_TYPE(x) (((PyDescrObject *)(x))->d_type)
 #define PyDescr_NAME(x) (((PyDescrObject *)(x))->d_name)
 #define Py_hash_t long
+#endif
+
+#ifdef Py_LIMITED_API
+# define PyTuple_GET_ITEM PyTuple_GetItem
+/* Note that PyTuple_SetItem() has different semantics from PyTuple_SET_ITEM as it decref's the original tuple item, so in general they cannot be used
+  interchangeably. However in SWIG-generated code PyTuple_SET_ITEM is only used with newly initialized tuples without any items and for them this does work. */
+# define PyTuple_SET_ITEM PyTuple_SetItem
+# define PyTuple_GET_SIZE PyTuple_Size
+# define PyCFunction_GET_FLAGS PyCFunction_GetFlags
+# define PyCFunction_GET_FUNCTION PyCFunction_GetFunction
+# define PyCFunction_GET_SELF PyCFunction_GetSelf
+# define PyList_GET_ITEM PyList_GetItem
+# define PyList_SET_ITEM PyList_SetItem
+# define PySliceObject PyObject
 #endif
